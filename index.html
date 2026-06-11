@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>清洁生产资金申报</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+.topbar{background:#1e293b;color:#fff;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+.topbar h1{font-size:15px}.topbar .btns{display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border:none;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-d{background:#334155;color:#e2e8f0}.btn-p{background:#2563eb;color:#fff}.btn-g{background:#059669;color:#fff}
+.upload{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 48px);padding:40px 20px}
+.card{background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.06);padding:40px;max-width:500px;width:100%;text-align:center}
+.card h2{font-size:22px;font-weight:700;color:#111827;margin-bottom:4px}
+.card .sub{font-size:14px;color:#6b7280;margin-bottom:28px}
+.drop{border:2px dashed #cbd5e1;border-radius:8px;padding:40px 24px;cursor:pointer;margin-bottom:20px}
+.drop:hover{border-color:#2563eb;background:#eff6ff}
+.drop svg{width:52px;height:52px;color:#94a3b8;margin-bottom:12px}
+.drop h3{font-size:17px;color:#374151;margin-bottom:4px}
+.drop p{font-size:13px;color:#9ca3af}
+.okbar{display:none;align-items:center;gap:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px 20px;margin-bottom:20px}
+.okbar svg{width:24px;height:24px;color:#16a34a}
+.okbar .fn{font-size:14px;color:#166534}.okbar .fs{font-size:12px;color:#4ade80}
+.big{width:100%;justify-content:center;padding:14px;font-size:16px}.big.ready{background:#059669}
+.progress{display:none;max-width:500px;margin:60px auto;padding:0 20px}
+.pcard{background:#fff;border-radius:10px;padding:32px;text-align:center}
+.pcard h3{font-size:15px;margin-bottom:20px}
+.pbar{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-bottom:8px}
+.pfill{height:100%;width:0;background:#2563eb;border-radius:3px;transition:width .8s}
+.pfill.w1{width:33%}.pfill.w2{width:66%}.pfill.w3{width:100%}
+.ptext{font-size:13px;color:#6b7280;margin-bottom:20px}
+.step{display:flex;gap:14px;padding:14px 0;border-top:1px solid #f1f5f9}.step:first-child{border-top:none}
+.dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px}
+.dot.w{background:#f1f5f9;color:#cbd5e1}.dot.r{background:#dbeafe;color:#2563eb}
+.dot.d{background:#dcfce7;color:#16a34a}.dot.e{background:#fef2f2;color:#ef4444}
+.stinfo{flex:1}.stinfo .t{font-size:13px;font-weight:600;color:#374151}
+.stinfo .s{font-size:11px;color:#9ca3af;margin-top:2px}
+.split{display:none;height:calc(100vh - 48px)}
+.split .L{width:38%;min-width:300px;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;background:#fff}
+.split .R{flex:1;overflow-y:auto;background:#f8f9fb}
+.L .thd{display:flex;gap:12px;padding:6px 14px;background:#f8f9fb;border-bottom:1px solid #e5e7eb;font-size:12px}
+.L .thd span{cursor:pointer;padding:2px 8px;border-radius:3px}
+.L .tbd{flex:1;overflow-y:auto;padding:12px 14px;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;background:#fafbfc}
+.L .tbd.hide{display:none}.L .tbd mark{background:#fef08a}
+.R .sbar{display:none;background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 20px}
+.R .sbar .si{display:flex;gap:24px}.R .sbar .si .it{font-size:13px}
+.R .sbar .si .it .lbl{color:#9ca3af;font-size:11px}.R .sbar .si .it .val{font-weight:600}
+.R .sbar .si .it .val.hl{color:#2563eb;font-size:16px}
+.R .fwrap{display:none;padding:16px 20px 40px;max-width:1000px}
+.R .fwrap h3{font-size:13px;font-weight:600;color:#374151;margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid #e5e7eb}
+.fld{margin-bottom:8px}.fld label{display:block;font-size:11px;font-weight:500;color:#6b7280;margin-bottom:2px}
+.fld input,.fld textarea{width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;font-family:inherit}
+.fld textarea{resize:vertical;min-height:60px}
+.tbw{overflow-x:auto;margin:8px 0;border:1px solid #e5e7eb;border-radius:6px;background:#fff}
+.tbw table{border-collapse:collapse;font-size:12px;min-width:1800px}
+.tbw thead{background:#f1f5f9;position:sticky;top:0;z-index:2}
+.tbw th{padding:6px 4px;text-align:center;font-weight:600;font-size:10px;color:#475569;border-bottom:2px solid #cbd5e1;border-right:1px solid #e2e8f0;white-space:nowrap;background:#f1f5f9}
+.tbw th.sl{position:sticky;z-index:3;left:0}.tbw th.sl2{position:sticky;z-index:3;left:55px}
+.tbw td{padding:4px;border-bottom:1px solid #f1f5f9;border-right:1px solid #f1f5f9;vertical-align:top;font-size:12px}
+.tbw td.sl{position:sticky;z-index:1;left:0;background:#fff}.tbw td.sl2{position:sticky;z-index:1;left:55px;background:#fff}
+.tbw tr:nth-child(even) td{background:#fafbfc}.tbw tr:nth-child(even) td.sl,.tbw tr:nth-child(even) td.sl2{background:#fafbfc}
+.tbw tr:hover td{background:#eff6ff}.tbw tr:hover td.sl,.tbw tr:hover td.sl2{background:#eff6ff}
+.tbw td input,.tbw td textarea{width:100%;border:1px solid transparent;padding:3px 5px;border-radius:3px;font-size:12px;font-family:inherit;background:transparent;text-align:center}
+.tbw td textarea{text-align:left;resize:vertical;min-height:24px}
+.tbw .tr td{background:#e8ecf1!important;font-weight:700;border-top:2px solid #cbd5e1}
+.tbw td.nc{cursor:pointer}.tbw td.nc:hover{background:#dbeafe!important}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}.modal{background:#fff;border-radius:10px;padding:24px;width:500px;max-width:90vw;max-height:80vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:14px}
+.modal .fg{margin-bottom:10px}.modal .fg label{font-size:11px;font-weight:500;color:#6b7280;display:block;margin-bottom:2px}
+.modal .fg input{width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;font-family:inherit}
+.tbox{position:fixed;bottom:20px;right:20px;z-index:300}
+.toast{padding:8px 14px;border-radius:5px;font-size:12px;color:#fff;margin-top:6px;animation:slideIn .2s ease;max-width:320px}
+.toast.ok{background:#059669}.toast.err{background:#dc2626}.toast.info{background:#2563eb}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@media(max-width:700px){.split .L{width:100%;min-width:0;max-height:40vh}.split{flex-direction:column}}
+</style>
+</head>
+<body>
+<header class="topbar"><h1>清洁生产资金申报 v12</h1>
+<div class="btns">
+<button class="btn btn-d" onclick="openCfg()">配置</button>
+<button class="btn btn-d" onclick="demo()">示例</button>
+<button class="btn btn-g" onclick="doWord()">导出Word</button>
+</div></header>
+<div class="upload" id="up"><div class="card">
+<h2>清洁生产资金申报工具</h2><div class="sub">上传验收报告,AI自动提取方案及绩效数据</div>
+<div class="drop" id="dz">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+<h3>拖拽文件或点击选择</h3><p>PDF/图片,最大50MB</p>
+</div>
+<input type="file" id="fi" accept=".pdf,.jpg,.jpeg,.png,.bmp" style="display:none">
+<div class="okbar" id="ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div><div class="fn" id="fnm"></div><div class="fs" id="fsz"></div></div></div>
+<button class="btn btn-p big" id="mb" onclick="mainBtn()">选择文件</button>
+</div></div>
+<div class="progress" id="prog"><div class="pcard"><h3>处理中...</h3>
+<div class="pbar"><div class="pfill" id="pf"></div></div><div class="ptext" id="pt"></div>
+<div class="step" id="ps1"><div class="dot w">1</div><div class="stinfo"><div class="t">文件解析</div><div class="s">提取文档文字内容</div></div></div>
+<div class="step" id="ps2"><div class="dot w">2</div><div class="stinfo"><div class="t">AI智能提取</div><div class="s">识别方案与绩效数据</div></div></div>
+<div class="step" id="ps3"><div class="dot w">3</div><div class="stinfo"><div class="t">生成结果</div><div class="s">整理并展示提取成果</div></div></div></div>
+<div style="text-align:center;color:#ef4444;font-size:12px;margin-top:12px;display:none" id="pe"></div></div>
+<div class="split" id="sp"><div class="L">
+<div class="thd"><span onclick="showTab('pdf')" style="cursor:pointer;font-weight:600;color:#2563eb">PDF</span><span onclick="showTab('text')" style="cursor:pointer;margin-left:12px">原文</span></div>
+<div id="pdfTab" style="flex:1;background:#525659"><iframe id="pdfFrame" style="width:100%;height:100%;border:none;display:none"></iframe></div>
+<div class="tbd" id="tb"></div></div>
+<div class="R">
+<div class="sbar" id="sb"><div class="si"><div class="it"><div class="lbl">企业</div><div class="val" id="sc">—</div></div><div class="it"><div class="lbl">方案数</div><div class="val" id="sn">0</div></div><div class="it"><div class="lbl">总投资额</div><div class="val hl" id="si">0.00</div><div class="lbl">万元</div></div></div></div>
+<div class="fwrap" id="fw"><div class="fld"><label>企业名称</label><input type="text" id="fco" onchange="sf('companyName',this.value)"></div>
+<h3>项目实施情况</h3><div class="fld"><label>项目简介</label><textarea id="fsu" rows="3" onchange="sf('section3.projectSummary',this.value)"></textarea></div>
+<div class="fld"><label>实施成效</label><textarea id="fre" rows="3" onchange="sf('section3.resultsSummary',this.value)"></textarea></div>
+<h3>项目绩效表</h3><div style="margin-bottom:6px"><button class="btn btn-d" onclick="addP()">+ 添加方案</button></div>
+<div class="tbw"><table><thead id="th"></thead><tbody id="tbd"></tbody></table></div>
+<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-p" onclick="xCSV()">导出CSV</button><button class="btn btn-d" onclick="print()">打印</button><button class="btn btn-d" onclick="reset()">重新开始</button></div></div></div></div>
+<div class="modal-bg" id="cfg"><div class="modal"><h3>API接口配置</h3>
+<div class="fg"><label>科大讯飞 APPID</label><input type="text" id="cxa"></div>
+<div style="display:flex;gap:10px"><div class="fg" style="flex:1"><label>APIKey</label><input type="password" id="cxk"></div><div class="fg" style="flex:1"><label>APISecret</label><input type="password" id="cxs"></div></div>
+<div class="fg"><label>OCR端点</label><input type="text" id="cxe"></div><hr style="margin:10px 0">
+<div class="fg"><label>DeepSeek API Key</label><input type="password" id="cdk"></div><div class="fg"><label>端点URL</label><input type="text" id="cde"></div><div class="fg"><label>模型</label><input type="text" id="cdm"></div>
+<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn btn-d" onclick="G('cfg').classList.remove('show')">取消</button><button class="btn btn-p" onclick="saveCfg()">保存</button></div></div></div>
+<div class="tbox" id="tbx"></div>
+<script src="app.js?v=1781149472"></script>
+
+</body>
+</html>
