@@ -221,14 +221,14 @@ def call_deepseek(text, config):
     'ZG1 | waterSaving | 年节水3000吨',
 ])
     body = {"model": model, "messages": [{"role": "system", "content": system_prompt},
-            {"role": "user", "content": "请从以下清洁生产验收报告文本中提取信息：\n\n" + text[:200000]}],
-            "temperature": 0.1, "max_tokens": 16384, "response_format": {"type": "text"}}
+            {"role": "user", "content": "请从以下清洁生产验收报告文本中提取信息：\n\n" + text[:150000]}],
+            "temperature": 0.1, "max_tokens": 8192, "response_format": {"type": "text"}}
     req_data = json.dumps(body).encode("utf-8")
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
     ctx = ssl.create_default_context()
     req = urllib.request.Request(endpoint, data=req_data, headers=headers, method="POST")
     try:
-        with urllib.request.urlopen(req, context=ctx, timeout=90) as resp:
+        with urllib.request.urlopen(req, context=ctx, timeout=120) as resp:
             result = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         err = e.read().decode("utf-8", errors="replace")
