@@ -427,20 +427,9 @@ class AppHandler(http.server.BaseHTTPRequestHandler):
                            "ds_endpoint": cfg.get("ds_endpoint",""), "ds_model": cfg.get("ds_model","deepseek-chat"),
                            "has_xf_keys": bool(cfg.get("xf_apikey")), "has_ds_key": bool(cfg.get("ds_apikey"))})
         elif path.startswith("/uploads/"):
-            fid = os.path.basename(path)
-            data = cache_get(fid)
-            if data:
-                self.send_response(200)
-                self.send_header("Content-Type","application/pdf")
-                self.send_header("Cache-Control","max-age=3600")
-                self.cors()
-                self.send_header("Content-Length",str(len(data)))
-                self.end_headers()
-                self.wfile.write(data)
-            else:
-                fp = UPLOAD_DIR / os.path.basename(path)
-                if fp.exists(): self.serve_file(str(fp), "application/pdf")
-                else: self.send_error(404)
+            fp = UPLOAD_DIR / os.path.basename(path)
+            if fp.exists(): self.serve_file(str(fp), "application/pdf")
+            else: self.send_error(404)
         else:
             fp = ROOT / path.lstrip("/")
             if fp.exists() and fp.is_file():
