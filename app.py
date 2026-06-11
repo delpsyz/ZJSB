@@ -9,6 +9,20 @@ ROOT = Path(__file__).parent
 UPLOAD_DIR = ROOT / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+MEMORY_CACHE = {}
+MAX_CACHE = 10
+CACHE_LOCK = threading.Lock()
+
+def cache_put(fid, data):
+    with CACHE_LOCK:
+        MEMORY_CACHE[fid] = data
+        while len(MEMORY_CACHE) > MAX_CACHE:
+            MEMORY_CACHE.pop(next(iter(MEMORY_CACHE)))
+
+def cache_get(fid):
+    with CACHE_LOCK:
+        return MEMORY_CACHE.get(fid)
+
 def safe_read(rfile, length):
     chunks = []
     remaining = length
@@ -408,9 +422,20 @@ class AppHandler(http.server.BaseHTTPRequestHandler):
                            "ds_endpoint": cfg.get("ds_endpoint",""), "ds_model": cfg.get("ds_model","deepseek-chat"),
                            "has_xf_keys": bool(cfg.get("xf_apikey")), "has_ds_key": bool(cfg.get("ds_apikey"))})
         elif path.startswith("/uploads/"):
-            fp = UPLOAD_DIR / os.path.basename(path)
-            if fp.exists(): self.serve_file(str(fp), "application/pdf")
-            else: self.send_error(404)
+            fid = os.path.basename(path)
+            data = cache_get(fid)
+            if data:
+                self.send_response(200)
+                self.send_header("Content-Type","application/pdf")
+                self.send_header("Cache-Control","max-age=3600")
+                self.cors()
+                self.send_header("Content-Length",str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+            else:
+                fp = UPLOAD_DIR / os.path.basename(path)
+                if fp.exists(): self.serve_file(str(fp), "application/pdf")
+                else: self.send_error(404)
         else:
             fp = ROOT / path.lstrip("/")
             if fp.exists() and fp.is_file():
