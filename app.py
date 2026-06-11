@@ -478,11 +478,18 @@ class AppHandler(http.server.BaseHTTPRequestHandler):
             if ext == ".pdf":
                 try: text = extract_pdf_text(file_bytes); method = "pdf_direct"
                 except Exception as e: print(f"PDF error: {e}")
-                if len(text.strip()) < 300:
-                    cfg = load_config()
-                    if cfg.get("xf_appid") and cfg.get("xf_apikey"):
-                        try: text = call_xfyun_ocr(file_bytes, filename, cfg); method = "xfyun_ocr"
-                        except Exception as e2: print(f"OCR fallback also failed: {e2}")
+                cfg = load_config()
+                if cfg.get("xf_appid") and cfg.get("xf_apikey"):
+                    try:
+                        ocr_text = call_xfyun_ocr(file_bytes, filename, cfg)
+                        if ocr_text and len(ocr_text.strip()) > len(text.strip()):
+                            text = ocr_text
+                            method = "xfyun_ocr"
+                            print(f"  OCR override: {len(text)} chars (was {len(text)} before)")
+                    except Exception as e2:
+                        print(f"  OCR attempt failed: {e2}")
+                        if len(text.strip()) < 10:
+                            text = text + " [OCR失败:" + str(e2)[:200] + "]" 
             elif ext in [".jpg",".jpeg",".png",".bmp"]:
                 cfg = load_config()
                 if not cfg.get("xf_appid") or not cfg.get("xf_apikey"):
