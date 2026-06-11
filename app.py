@@ -44,7 +44,12 @@ def call_xfyun_ocr(file_bytes, filename, config):
     checksum = hashlib.md5((api_key + cur_time + param).encode("utf-8")).hexdigest()
     headers = {"X-Appid": config.get("xf_appid", ""), "X-CurTime": cur_time, "X-Param": param, "X-CheckSum": checksum, "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"}
     req_data = urllib.parse.urlencode({"image": img_b64}).encode("utf-8")
-    ctx = ssl.create_default_context()
+    try:
+        ctx = ssl.create_default_context()
+    except:
+        ctx = ssl._create_unverified_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
     req = urllib.request.Request(endpoint, data=req_data, headers=headers, method="POST")
     try:
         with urllib.request.urlopen(req, context=ctx, timeout=30) as resp:
