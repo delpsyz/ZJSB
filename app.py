@@ -126,13 +126,16 @@ def parse_tagged_response(content):
         for line in sec4_m.group(1).split(chr(10)):
             line = line.strip()
             if not line: continue
-            if any(s in line for s in ["表格列说明", "数据行", "方案序号", "seq"]):
+            if any(s in line for s in ["表格列说明", "数据行", "方案序号", "seq", "方案汇总", "汇总表", "绩效表", "列出每个"]):
                 in_data = True; continue
             if not in_data: continue
             parts = [p.strip() for p in line.split("|")]
             if len(parts) < 5: continue
             seq = parts[0].strip()
-            if not seq or seq == "0": continue
+            if not seq: continue
+            # Skip rows that look like headers
+            if seq.startswith("表格") or seq.startswith("列") or seq.startswith("数据"):
+                continue
             plan = {"seq": str(seq), "name": parts[1] if len(parts)>1 else "",
                     "content": parts[2] if len(parts)>2 else "",
                     "other": parts[20] if len(parts)>20 else ""}
@@ -202,11 +205,11 @@ def call_deepseek(text, config):
     '',
     '---SEC3---',
     '项目简介:',
-    '(逐个列出每个方案,格式: 方案编号-方案名称：直接复制该方案在报告中的描述段落原文)',
-    '示例: WD1-锅炉改造：对原有燃煤锅炉进行节能改造,安装烟气余热回收装置,改造后年节约标煤850吨。',
-    '示例: ZG1-废水处理系统升级：建设MBR膜处理系统,处理能力提升至500吨/天,实现废水回用。',
+    '(逐个列出每个方案,格式: 方案编号-方案名称：方案描述。从报告方案章节的正文中提取。如果正文有描述段落则复制原文;如果只有可行性分析标题,则简述方案目标)',
+    '示例: WD1-锅炉改造：对原有燃煤锅炉进行节能改造,安装烟气余热回收装置。',
+    '示例: ZG1-废水处理系统升级：建设MBR膜处理系统,实现废水回用。',
     '实施成效:',
-    '复制报告结论章节中关于实施成效的完整段落(至少3-5句话)',
+    '复制结论章节关于实施成效的完整段落。段落中的数字必须是真实数据,不能用XXX占位符',
     '',
     '---SEC4---',
     '表格列顺序(21列): seq | name | investment | economicBenefit | electricitySaving | coalSaving | co2Reduction | materialSaving | waterSaving | codcrReduction | ammoniaReduction | smokeReduction | dustReduction | so2Reduction | noxReduction | vocReduction | solidWasteReduction | liquidWasteReduction | heavyMetalReduction | other',
@@ -222,7 +225,7 @@ def call_deepseek(text, config):
     'ZG1 | waterSaving | 年节水3000吨',
 ])
     body = {"model": model, "messages": [{"role": "system", "content": system_prompt},
-            {"role": "user", "content": "请从以下清洁生产验收报告文本中提取信息：\n\n" + text[:120000]}],
+            {"role": "user", "content": "请从以下清洁生产验收报告文本中提取信息：\n\n" + text[:150000]}],
             "temperature": 0.1, "max_tokens": 8192, "response_format": {"type": "text"}}
     req_data = json.dumps(body).encode("utf-8")
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
