@@ -129,12 +129,17 @@ def parse_tagged_response(content):
             if len(parts) < 3: continue
             seq = parts[0].strip()
             if not seq: continue
-            # Must look like a plan ID: starts with letter+number or is pure number
+            # seq MUST start with letter(s) then number (like WD1, ZG2, F3)
             import re as _re
-            if not _re.match(r'^[A-Za-z]*\d+', seq):
-                # seq like "表格", "seq", "name", "以下" etc skip
+            if not _re.match(r'^[A-Za-z]+\d+$', seq):
                 continue
-            if seq.lower() in ["seq","name","investment","table","total"]:
+            # name (parts[1]) must NOT be an English field name
+            name_check = parts[1].strip().lower() if len(parts) > 1 else ""
+            english_fields = ["investment","economicbenefit","electricitysaving","coalsaving",
+                "co2reduction","materialsaving","watersaving","codcrreduction","ammoniareduction",
+                "smokereduction","dustreduction","so2reduction","noxreduction","vocreduction",
+                "solidwastereduction","liquidwastereduction","heavymetalreduction","other","name","seq"]
+            if name_check.replace(" ","") in english_fields:
                 continue
             plan = {"seq": str(seq), "name": parts[1] if len(parts)>1 else "",
                     "content": "", "other": parts[19] if len(parts)>19 else ""}
