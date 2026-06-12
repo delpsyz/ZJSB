@@ -122,27 +122,20 @@ def parse_tagged_response(content):
 
     sec4_m = re.search(r"---SEC4---\s*([\s\S]*?)(?=\Z)", content, re.DOTALL)
     if sec4_m:
-        in_data = False
         for line in sec4_m.group(1).split(chr(10)):
             line = line.strip()
-            if not line: continue
-            if any(s in line for s in ["表格列说明", "数据行", "方案序号", "seq", "方案汇总", "汇总表", "绩效表", "列出每个"]):
-                in_data = True; continue
-            if not in_data: continue
+            if not line or "|" not in line: continue
             parts = [p.strip() for p in line.split("|")]
-            if len(parts) < 5: continue
+            if len(parts) < 3: continue
             seq = parts[0].strip()
             if not seq: continue
-            # Skip rows that look like headers
-            if seq.startswith("表格") or seq.startswith("列") or seq.startswith("数据"):
+            if any(seq.startswith(s) for s in ["表格", "列", "数据", "以下", "方案序", "seq"]):
                 continue
             plan = {"seq": str(seq), "name": parts[1] if len(parts)>1 else "",
-                    "content": parts[2] if len(parts)>2 else "",
-                    "other": parts[20] if len(parts)>20 else ""}
-            field_order = num_fields
-            for fi, fn in enumerate(field_order):
-                idx = fi + 2
-                plan[fn] = safe_float(parts[idx]) if idx < len(parts) else 0
+                    "content": "", "other": parts[19] if len(parts)>19 else ""}
+            for fi, fn in enumerate(num_fields):
+                pidx = fi + 2
+                plan[fn] = safe_float(parts[pidx]) if pidx < len(parts) else 0
             result["section4"]["plans"].append(plan)
 
     totals = {}
