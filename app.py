@@ -129,7 +129,12 @@ def parse_tagged_response(content):
             if len(parts) < 3: continue
             seq = parts[0].strip()
             if not seq: continue
-            if any(seq.startswith(s) for s in ["表格", "列", "数据", "以下", "方案序", "seq"]):
+            # Must look like a plan ID: starts with letter+number or is pure number
+            import re as _re
+            if not _re.match(r'^[A-Za-z]*\d+', seq):
+                # seq like "表格", "seq", "name", "以下" etc skip
+                continue
+            if seq.lower() in ["seq","name","investment","table","total"]:
                 continue
             plan = {"seq": str(seq), "name": parts[1] if len(parts)>1 else "",
                     "content": "", "other": parts[19] if len(parts)>19 else ""}
@@ -205,12 +210,12 @@ def call_deepseek(text, config):
     '从报告第9章(结论章节)完整复制实施成效段落。该章节会列出所有方案的汇总投资额、汇总经济效益、汇总环境效益(节电量、节水量、VOCs减排量、固废减排量等具体数字)。必须填入这些真实数字,不能省略',
     '',
     '---SEC4---',
-    '表格列顺序(21列): seq | name | investment | economicBenefit | electricitySaving | coalSaving | co2Reduction | materialSaving | waterSaving | codcrReduction | ammoniaReduction | smokeReduction | dustReduction | so2Reduction | noxReduction | vocReduction | solidWasteReduction | liquidWasteReduction | heavyMetalReduction | other',
+    '表格列顺序(20列,用|分隔,全中文): 编号 | 名称 | 投资额 | 经济效益 | 节电量 | 折标煤 | CO2 | 原辅料 | 节水量 | COD | 氨氮 | 烟尘 | 粉尘 | SO2 | NOx | VOC | 固废 | 废液 | 重金属 | 其他',
     '',
-    '数据行示例(数值必须来自方案汇总表,找不到填0,不要填"方案名称"等占位文字):',
+    '数据行示例(数值来自方案汇总表,严格照抄报告原文,不添英文。禁止输出seq/name等英文词)::',
     'WD1 | 锅炉余热回收改造 | 50.00 | 12.50 | 5.20 | 85 | 220 | 0 | 1200 | 0.5 | 0.2 | 0.1 | 0 | 0.3 | 0 | 0.8 | 0 | 0 | 0 | ',
     '',
-    '现在请输出所有方案的完整数据行(每行21个字段用|分隔):',
+    '现在请输出所有方案的完整数据行(每行20个字段用|分隔):',
     '',
     '---CITE---',
     '对每个有数值的字段,提供原文出处',
