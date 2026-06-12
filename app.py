@@ -10,6 +10,7 @@ UPLOAD_DIR = ROOT / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 MEMORY_CACHE = {}
+AI_TASKS = {}
 MAX_CACHE = 10
 CACHE_LOCK = threading.Lock()
 
@@ -221,8 +222,8 @@ def call_deepseek(text, config):
     'ZG1 | waterSaving | 年节水3000吨',
 ])
     body = {"model": model, "messages": [{"role": "system", "content": system_prompt},
-            {"role": "user", "content": "请从以下清洁生产验收报告文本中提取信息：\n\n" + text[:60000]}],
-            "temperature": 0.1, "max_tokens": 4096, "response_format": {"type": "text"}}
+            {"role": "user", "content": "请从以下清洁生产验收报告文本中提取信息：\n\n" + text[:120000]}],
+            "temperature": 0.1, "max_tokens": 8192, "response_format": {"type": "text"}}
     req_data = json.dumps(body).encode("utf-8")
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
     ctx = ssl.create_default_context()
@@ -501,12 +502,36 @@ class AppHandler(http.server.BaseHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length", 0))
             body = json.loads(safe_read(self.rfile, length))
+            action = body.get("action", "process")
             text = body.get("text", "")
-            if not text or len(text.strip()) < 10: return self.send_json({"ok": False, "error": "文本过短"}, 400)
-            cfg = load_config()
-            if not cfg.get("ds_apikey"): return self.send_json({"ok": False, "error": "请先配置DeepSeek"}, 400)
-            result = call_deepseek(text, cfg)
-            self.send_json({"ok": True, "data": result})
+            tid = body.get("taskId", "")
+            if action == "process":
+                if not text or len(text.strip()) < 10:
+                    return self.send_json({"ok": False, "error": "text too short"}, 400)
+                cfg = load_config()
+                if not cfg.get("ds_apikey"):
+                    return self.send_json({"ok": False, "error": "no API key"}, 400)
+                tid = str(uuid.uuid4())[:8]
+                AI_TASKS[tid] = {"s": "processing", "r": None, "e": None}
+                def bg():
+                    try:
+                        AI_TASKS[tid] = {"s": "done", "r": call_deepseek(text, cfg), "e": None}
+                    except Exception as ex:
+                        AI_TASKS[tid] = {"s": "error", "r": None, "e": str(ex)}
+                threading.Thread(target=bg, daemon=True).start()
+                self.send_json({"ok": True, "taskId": tid, "status": "processing"})
+            elif action == "poll":
+                t = AI_TASKS.get(tid)
+                if not t:
+                    return self.send_json({"ok": False, "error": "not found"}, 404)
+                if t["s"] == "done":
+                    self.send_json({"ok": True, "status": "done", "data": t["r"]})
+                elif t["s"] == "error":
+                    self.send_json({"ok": False, "error": t["e"]})
+                else:
+                    self.send_json({"ok": True, "status": "processing"})
+            else:
+                self.send_json({"ok": False, "error": "bad action"}, 400)
         except Exception as e:
             self.send_json({"ok": False, "error": str(e)}, 500)
 
