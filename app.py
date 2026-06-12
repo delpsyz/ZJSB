@@ -133,13 +133,14 @@ def parse_tagged_response(content):
             import re as _re
             if not _re.match(r'^[A-Za-z]+\d+$', seq):
                 continue
-            # name (parts[1]) must NOT be an English field name
-            name_check = parts[1].strip().lower() if len(parts) > 1 else ""
-            english_fields = ["investment","economicbenefit","electricitysaving","coalsaving",
-                "co2reduction","materialsaving","watersaving","codcrreduction","ammoniareduction",
-                "smokereduction","dustreduction","so2reduction","noxreduction","vocreduction",
-                "solidwastereduction","liquidwastereduction","heavymetalreduction","other","name","seq"]
-            if name_check.replace(" ","") in english_fields:
+            # name (parts[1]) must contain Chinese characters (not pure English)
+            name_check = parts[1].strip() if len(parts) > 1 else ""
+            has_cjk = False
+            for ch in name_check:
+                if '一' <= ch <= '鿿':
+                    has_cjk = True
+                    break
+            if not has_cjk:
                 continue
             plan = {"seq": str(seq), "name": parts[1] if len(parts)>1 else "",
                     "content": "", "other": parts[19] if len(parts)>19 else ""}
