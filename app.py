@@ -138,7 +138,7 @@ def parse_tagged_response(content):
                     "other": parts[20] if len(parts)>20 else ""}
             field_order = num_fields
             for fi, fn in enumerate(field_order):
-                idx = fi + 3
+                idx = fi + 2
                 plan[fn] = safe_float(parts[idx]) if idx < len(parts) else 0
             result["section4"]["plans"].append(plan)
 
@@ -183,13 +183,13 @@ def call_deepseek(text, config):
     '=== 数据查找指引 ===',
     '1. 方案列表(WD代表无低费方案,ZG代表中高费方案): 在报告中查找方案清单章节，找到每个方案的编号、名称、详细描述',
     '2. 方案内容: 直接复制每个方案在正文中的描述段落原文，不要自己总结或改写',
-    '3. 绩效数值: 在报告中查找方案汇总表(绩效表)，每个方案对应一行，包含投资额、节电量、节水量、COD减排等数值',
+    '3. 绩效数值: 重点参考报告第7章(方案章节)的方案汇总表(绩效表),该表每行对应一个方案包含所有数值，每个方案对应一行，包含投资额、节电量、节水量、COD减排等数值',
     '4. 实施成效: 查找报告结论章节(通常为第9章)，复制完整的结论段落，不要只复制一句话',
     '',
     '=== 提取要求(非常重要) ===',
     '- 列出报告中的每一个方案，不管无低费(WD)还是中高费(ZG),一个都不能漏',
     '- 方案内容直接复制原文中该方案的完整描述段落',
-    '- 绩效数值必须从方案汇总表中逐行提取，绝不能不填或全填0',
+    '- 绩效数值必须从第7章方案汇总表中逐行提取,数值很关键,即使投资额只有1万也要填入1,绝对不能填0或跳过',
     '- 如果原文说"投资50.00万元",investment就填50.00',
     '- 如果原文说"年节电10.12万kWh",electricitySaving就填10.12',
     '- 如果原文说"年节水3000吨",waterSaving就填3000',
@@ -209,10 +209,10 @@ def call_deepseek(text, config):
     '复制报告结论章节中关于实施成效的完整段落(至少3-5句话)',
     '',
     '---SEC4---',
-    '表格列顺序(21列): seq | name | content | investment | economicBenefit | electricitySaving | coalSaving | co2Reduction | materialSaving | waterSaving | codcrReduction | ammoniaReduction | smokeReduction | dustReduction | so2Reduction | noxReduction | vocReduction | solidWasteReduction | liquidWasteReduction | heavyMetalReduction | other',
+    '表格列顺序(21列): seq | name | investment | economicBenefit | electricitySaving | coalSaving | co2Reduction | materialSaving | waterSaving | codcrReduction | ammoniaReduction | smokeReduction | dustReduction | so2Reduction | noxReduction | vocReduction | solidWasteReduction | liquidWasteReduction | heavyMetalReduction | other',
     '',
     '数据行示例(数值必须来自方案汇总表,找不到填0,不要填"方案名称"等占位文字):',
-    'WD1 | 锅炉余热回收改造 | 对燃烧系统进行改造,增加余热回收装置... | 50.00 | 12.50 | 5.20 | 85 | 220 | 0 | 1200 | 0.5 | 0.2 | 0.1 | 0 | 0.3 | 0 | 0.8 | 0 | 0 | 0 | ',
+    'WD1 | 锅炉余热回收改造 | 50.00 | 12.50 | 5.20 | 85 | 220 | 0 | 1200 | 0.5 | 0.2 | 0.1 | 0 | 0.3 | 0 | 0.8 | 0 | 0 | 0 | ',
     '',
     '现在请输出所有方案的完整数据行(每行21个字段用|分隔):',
     '',
